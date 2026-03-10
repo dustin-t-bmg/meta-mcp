@@ -2,8 +2,8 @@
 node_modules/
 npm-debug.log*
 
-# Build output
-build/
+# Build output - NOT excluded since we copy pre-built files
+# build/
 
 # Tests
 tests/

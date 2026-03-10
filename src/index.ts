@@ -202,6 +202,150 @@ async function main() {
       }
     });
 
+    // Add pixel stats tool for custom events
+    server.tool(
+      "get_pixel_stats",
+      "Get pixel event statistics including custom events",
+      {
+        pixel_id: {
+          type: "string",
+          description: "Meta Pixel ID",
+        },
+        event_name: {
+          type: "string",
+          description: "Optional: Filter by specific event name (e.g., 'Download_Brochure_1')",
+        },
+        start_time: {
+          type: "number",
+          description: "Optional: Start time as Unix timestamp (default: 28 days ago)",
+        },
+        end_time: {
+          type: "number",
+          description: "Optional: End time as Unix timestamp (default: now)",
+        },
+      },
+      async (args: { pixel_id: string; event_name?: string; start_time?: number; end_time?: number }) => {
+        try {
+          const params: any = {};
+          if (args.event_name) {
+            params.event = args.event_name;
+          }
+          if (args.start_time) {
+            params.start_time = args.start_time;
+          }
+          if (args.end_time) {
+            params.end_time = args.end_time;
+          }
+
+          const stats = await metaClient.getPixelEventsWithStats(args.pixel_id, params);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(stats, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error occurred";
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error getting pixel stats: ${errorMessage}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Add pixel info tool
+    server.tool(
+      "get_pixel_info",
+      "Get information about a Meta Pixel including last fired time",
+      {
+        pixel_id: {
+          type: "string",
+          description: "Meta Pixel ID",
+        },
+      },
+      async (args: { pixel_id: string }) => {
+        try {
+          const pixelInfo = await metaClient.getPixelEvents(args.pixel_id);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(pixelInfo, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error occurred";
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error getting pixel info: ${errorMessage}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Add custom conversions tool
+    server.tool(
+      "get_pixel_custom_conversions",
+      "Get custom conversions associated with a Meta Pixel",
+      {
+        pixel_id: {
+          type: "string",
+          description: "Meta Pixel ID",
+        },
+        limit: {
+          type: "number",
+          description: "Optional: Maximum number of results to return (default: 100)",
+        },
+      },
+      async (args: { pixel_id: string; limit?: number }) => {
+        try {
+          const customConversions = await metaClient.getPixelCustomConversions(
+            args.pixel_id,
+            { limit: args.limit }
+          );
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(customConversions, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error occurred";
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error getting custom conversions: ${errorMessage}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
     // Add server capabilities info
     server.tool("get_capabilities", {}, async () => {
       const capabilities = {

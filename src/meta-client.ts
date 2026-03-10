@@ -904,6 +904,74 @@ export class MetaApiClient {
   }
 
   // Image Upload for v23.0 compliance
+  // Pixel Stats Methods - Get custom event data
+  async getPixelStats(
+    pixelId: string,
+    params: {
+      event?: string;
+      start_time?: string;
+      end_time?: string;
+      aggregation?: 'event' | 'device' | 'custom_data_field';
+    } = {}
+  ): Promise<any> {
+    const queryParams: Record<string, any> = {
+      ...params,
+    };
+
+    const query = this.buildQueryString(queryParams);
+    return this.makeRequest<any>(
+      `${pixelId}/stats?${query}`
+    );
+  }
+
+  async getPixelEvents(
+    pixelId: string
+  ): Promise<any> {
+    // Get all events associated with the pixel
+    return this.makeRequest<any>(
+      `${pixelId}?fields=id,name,code,creation_time,is_unavailable,last_fired_time`
+    );
+  }
+
+  async getPixelCustomConversions(
+    pixelId: string,
+    params: {
+      limit?: number;
+    } = {}
+  ): Promise<any> {
+    const queryParams: Record<string, any> = {
+      fields: 'id,name,description,pixel,rule,default_conversion_value,custom_event_type,event_source_type,creation_time,last_fired_time,is_archived,is_unavailable',
+      limit: params.limit || 100,
+    };
+
+    const query = this.buildQueryString(queryParams);
+    return this.makeRequest<any>(
+      `${pixelId}/customconversions?${query}`
+    );
+  }
+
+  async getPixelEventsWithStats(
+    pixelId: string,
+    params: {
+      start_time?: number; // Unix timestamp
+      end_time?: number; // Unix timestamp
+    } = {}
+  ): Promise<any> {
+    // Calculate default time range (last 28 days)
+    const now = Math.floor(Date.now() / 1000);
+    const defaultStartTime = now - (28 * 24 * 60 * 60);
+
+    const queryParams: Record<string, any> = {
+      start_time: params.start_time || defaultStartTime,
+      end_time: params.end_time || now,
+    };
+
+    const query = this.buildQueryString(queryParams);
+    return this.makeRequest<any>(
+      `${pixelId}/stats?${query}`
+    );
+  }
+
   async uploadImageFromUrl(
     accountId: string,
     imageUrl: string,
